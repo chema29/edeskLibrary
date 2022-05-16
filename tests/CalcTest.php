@@ -15,7 +15,7 @@ class ExampleTest extends TestCase
     public function test_sum()
     {
         $calc = new Calc();
-        $result = $calc->suma(1,2);
+        $result = $calc->suma(2,2);
         $this->assertEquals(3,$result);
     }
 }
