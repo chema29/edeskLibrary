@@ -1343,3 +1343,4 @@ vendor/webmozart/assert/.github/workflows/ci.yaml
 vendor/webmozart/assert/src/Assert.php
 vendor/webmozart/assert/src/InvalidArgumentException.php
 vendor/webmozart/assert/src/Mixin.php
+desktop.ini
