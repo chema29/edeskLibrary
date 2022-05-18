@@ -4,7 +4,8 @@ namespace Tests;
 
 require_once "./vendor/autoload.php";
 
-use Edesk\Prueba\Calc;
+
+use Edesk\dbQuery\MyQuery;
 use PHPUnit\Framework\TestCase;
 
 class ExampleTest extends TestCase
@@ -14,8 +15,9 @@ class ExampleTest extends TestCase
      */
     public function test_sum()
     {
-        $calc = new Calc();
-        $result = $calc->suma(2,2);
-        $this->assertEquals(3,$result);
+        $MyQuery = new MyQuery();
+        $res = $MyQuery->sum(2,3);
+        return $res;
     }
 }
+
