@@ -12,10 +12,10 @@ class DbConnect
 
     public function __construct()
     {
-        $this->username = '';
-        $this->passwd = '';
-        $this->host = '';
-        $this->dbname = '';
+        $this->username = DB_USER;
+        $this->passwd = DB_PASS;
+        $this->host = DB_HOST;
+        $this->dbname = DB_NAME;
 
     }
 
