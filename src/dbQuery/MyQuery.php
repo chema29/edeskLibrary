@@ -13,14 +13,9 @@ class MyQuery extends DbConnect
     protected $call_nemaProcedute;
     private $mysqli;
 
-    public function sum(int $va1,int $va2){
-        return $va1 + $va2;
-    }
-
     public function __construct()
     {
         parent::__construct();
-        (string) $this->sql = null;
         (array) $this->getConsultaRegistro = [];
         (array) $this->getConsultarRegistros = [];
         (int) $this->num_rows = 0;
@@ -72,7 +67,7 @@ class MyQuery extends DbConnect
         return $resultwarning;
     }
 
-    public function set_consultaRegistro(string $sql = "")
+    public function set_consultaRegistro(string $sql = ""): void
     {
         try {
             $status = false;
@@ -84,8 +79,20 @@ class MyQuery extends DbConnect
             $result = $mysqli->query($sql); //ejecutamos la query
             if (!$result) {
                 $error = 'No se pudo consultar:' . $mysqli->error;
-                $array = array('status' => false, 'result' => $error, 'sql' => $sql, 'mysqli_info'=>$mysqli->info);
-                return $array;
+                $array = array(
+                    'status' => false,
+                    'mysqli' => array(
+                        'error' => $error,
+                        'warning' => "",
+                        'info' => "",
+                        'Affected_rows' => $Affected_rows,
+                        'num_rows' => $this->num_rows
+                    ),
+                    'sql' => $sql,
+                    'mysqli_info' => $mysqli->info
+                );
+                $this->getConsultaRegistro = $array;
+                exit();
             }
             $this->num_rows = $result->num_rows;
 
@@ -109,7 +116,7 @@ class MyQuery extends DbConnect
                     'Affected_rows' => $Affected_rows,
                     'num_rows' => $this->num_rows
                 ),
-                'Sql' => $sql,
+                'sql' => $sql,
                 'result' => $data
             );
 
@@ -117,12 +124,15 @@ class MyQuery extends DbConnect
             $this->getConsultaRegistro = $array;
         } catch (Throwable $e) {
             $array = array('status' => false, 'result' => $e);
-            return $array;
+            $this->getConsultaRegistro =  $array;
         }
     }
 
     public  function get_consultaRegistro(): array
     {
+        if (empty($this->getConsultaRegistro)) {
+            return array('status' => false, "getConsultaRegistro" => $this->getConsultaRegistro);
+        }
         $res=$this->getConsultaRegistro;
         $this->clearResult();
         return $res;
@@ -143,7 +153,17 @@ class MyQuery extends DbConnect
 
             if (!$result || empty($result)) {
                 $error = 'No se pudo consultar:' . $mysqli->error;
-                $array = array('status' => false, 'result' => $error, 'sql' => $sql);
+                $array = array(
+                    'status' => false, 'mysqli' => array(
+                        'error' => $error,
+                        'warning' => "",
+                        'info' => "",
+                        'Affected_rows' => $Affected_rows,
+                        'num_rows' => 0
+                    ),
+                    'sql' => $sql,
+                    'result' => [],
+                );
                 $this->getConsultarRegistros = $array;
                 return false;
             }
@@ -160,16 +180,8 @@ class MyQuery extends DbConnect
                     while ($row = mysqli_fetch_array($result,MYSQLI_NUM)) {
                         $data[] = $row;
                     }
-                    /* while ($valores= mysqli_fetch_row ($result))
-                    {
-                        for ($columna= 0; $columna < $limite; $columna++)
-                        {
-                            $data[$indice][$columna]= $valores[$columna];
-                        }
-                        $indice++;				
-                    } */
 
-			        mysqli_free_result ($result);
+                    mysqli_free_result ($result);
 
                 }
             }
@@ -185,7 +197,7 @@ class MyQuery extends DbConnect
                 'Sql' => $sql,
                 'result' => $data
             );
-           
+
             $this->getConsultarRegistros = $array;
             
         } catch (Throwable $e) {
@@ -194,6 +206,145 @@ class MyQuery extends DbConnect
     }
 
     public function get_consultarRegistros(): array
+    {
+        $res = $this->getConsultarRegistros;
+        $this->clearResult();
+        return $res;
+    }
+
+    // set consultaRegistro con nombre de campos de la tabla
+    public function set_consultaRegistroAssociated(string $sql = ""): void
+    {
+        try {
+            $status = false;
+            $error = "";
+            $data = "";
+            $Affected_rows = 0;
+            $sql = $sql;
+            $mysqli = $this->mysqli;
+            $result = $mysqli->query($sql); //ejecutamos la query
+            if (!$result) {
+                $error = 'No se pudo consultar:' . $mysqli->error;
+                $array = array(
+                    'status' => false,
+                    'mysqli' => array(
+                        'error' => $error,
+                        'warning' => "",
+                        'info' => "",
+                        'Affected_rows' => $Affected_rows,
+                        'num_rows' => $this->num_rows
+                    ),
+                    'sql' => $sql,
+                    'mysqli_info' => $mysqli->info
+                );
+                $this->getConsultaRegistro = $array;
+                exit();
+            }
+            $info = $mysqli->info; // recupera informacion adicional sobre la última consulta ejecutrada OJO xD no funciona con CALL X'D seria chevere
+            $warning = $this->mysqli_warning_show($mysqli); // devuelve informacion sobre los errores de la query ejectuda
+
+            if (empty($warning)) { // validamos que no tengamos warning
+                $Affected_rows = $mysqli->affected_rows;
+                if ($Affected_rows >= 0) { // validamos que no tengamos errores
+                    $status = true;
+                    $data = $result->fetch_assoc();
+                }
+            }
+
+            $array = array(
+                'status' => $status, 'mysqli' => array(
+                    'error' => $error,
+                    'warning' => $warning,
+                    'info' => $info,
+                    'Affected_rows' => $Affected_rows,
+                    'num_rows' => $this->num_rows
+                ), 'Sql' => $sql, 'result' => $data
+            );
+
+            $this->getConsultaRegistro = $array;
+        } catch (Throwable $e) {
+            $array = array('status' => false, 'result' => $e, 'sql' => $sql);
+            $this->getConsultaRegistro = $array;
+        }
+    }
+
+    // get consultaRegistro con nombre de campos de la tabla
+    public function get_consultaRegistroAssociated(): array
+    {
+        if (empty($this->getConsultaRegistro)) {
+            return array('status' => false, "getConsultaRegistro" => $this->getConsultaRegistro);
+        }
+        $res = $this->getConsultaRegistro;
+        $this->clearResult();
+        return $res;
+    }
+
+    // set consultarRegistros con nombre de campos de la tabla
+    public function set_consultarRegistrosAssociated(string $sql = "")
+    {
+        try {
+            $status = false;
+            $error = "";
+            $data = "";
+            $Affected_rows = 0;
+            $sql = $sql;
+            $mysqli = $this->mysqli;
+
+            $result = $mysqli->query($sql); //ejecutamos la query
+            $data = array();
+
+            if (!$result || empty($result)) {
+                $error = 'No se pudo consultar:' . $mysqli->error;
+                $array = array(
+                    'status' => false, 'mysqli' => array(
+                        'error' => $error,
+                        'warning' => "",
+                        'info' => "",
+                        'Affected_rows' => $Affected_rows,
+                        'num_rows' => 0
+                    ),
+                    'sql' => $sql,
+                    'result' => [],
+                );
+                $this->getConsultarRegistros = $array;
+                return false;
+            }
+            $info = $mysqli->info; // recupera informacion adicional sobre la última consulta ejecutada, OJO xD no funciona con CALL X'D seria chevere
+            $warning = $this->mysqli_warning_show($mysqli); // devuelve informacion sobre los errores de la query ejectuda
+            $this->num_rows = $result->num_rows;
+            if (empty($warning)) { // validamos que no tengamos warning
+                $Affected_rows = $mysqli->affected_rows;
+                if ($Affected_rows >= 0) { // validamos que no tengamos errores
+                    $status = true;
+                    $indice = 0;
+                    $limite = mysqli_num_fields($result);
+                    while ($row = mysqli_fetch_assoc($result)) {
+                        $data[] = $row;
+                    }
+                    mysqli_free_result($result);
+                }
+            }
+
+            $array = array(
+                'status' => $status, 'mysqli' => array(
+                    'error' => $error,
+                    'warning' => $warning,
+                    'info' => $info,
+                    'Affected_rows' => $Affected_rows,
+                    'num_rows' => $this->num_rows
+                ),
+                'Sql' => $sql,
+                'result' => $data
+            );
+
+            $this->getConsultarRegistros = $array;
+        } catch (Throwable $e) {
+            $this->getConsultarRegistros = array('status' => false, 'result' => $e);
+        }
+    }
+
+    // get consultarRegistros con nombre de campos de la tabla
+    public function get_consultarRegistrosAssociated(): array
     {
         $res = $this->getConsultarRegistros;
         $this->clearResult();
