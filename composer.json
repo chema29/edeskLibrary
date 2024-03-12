@@ -1,6 +1,6 @@
 {
     "name": "edesk/edesk-core",
-    "description": "Archivos b\u0000sicos para conexi\u0000n a la base de dato, para la ejecuci\u0000n de querys, clases para trabajar con correo electr\u0000nicos de elasticemail, y funciones generales.",
+    "description": "Archivos basicos para conexion a la base de datos.",
     "type": "library",
     "license": "MIT",
     "autoload": {
